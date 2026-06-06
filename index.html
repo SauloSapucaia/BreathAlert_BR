@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BreathAlert BR · Queimadas e Saúde Respiratória no Brasil</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Outfit:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* paleta herdada do projeto "O Brasil em Dados" */
+  --ink:#0f2027; --petrol:#203a43; --teal:#2c5364;
+  --cyan:#17a2b8; --green:#28C76F; --red:#EA5455; --amber:#fdca26;
+  --paper:#f8f9fa; --paper2:#eef1f4; --card:#ffffff;
+  --line:#e3e8ee; --muted:#6b7785;
+  --grad:linear-gradient(135deg,#0f2027,#203a43,#2c5364);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:'Outfit',sans-serif;background:var(--paper);color:var(--ink);line-height:1.6;overflow-x:hidden}
+h1,h2,h3,.display{font-family:'Fraunces',serif;font-weight:700;line-height:1.1}
+.mono{font-family:'Space Mono',monospace}
+
+/* progress bar */
+#progress{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,var(--cyan),var(--red));z-index:200;width:0}
+/* nav dots */
+#dots{position:fixed;right:22px;top:50%;transform:translateY(-50%);z-index:150;display:flex;flex-direction:column;gap:14px}
+#dots a{width:11px;height:11px;border-radius:50%;border:1.5px solid var(--cyan);background:transparent;transition:.25s;display:block}
+#dots a.on{background:var(--cyan);transform:scale(1.35)}
+@media(max-width:820px){#dots{display:none}}
+
+section{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:90px 8vw;position:relative;border-bottom:1px solid var(--line)}
+.scene-tag{font-family:'Space Mono',monospace;font-size:.72rem;letter-spacing:.32em;text-transform:uppercase;color:var(--cyan);margin-bottom:18px}
+.lede{font-size:clamp(1.05rem,1.8vw,1.35rem);color:var(--muted);max-width:60ch;font-weight:300}
+
+/* reveal */
+.rv{opacity:0;transform:translateY(28px);transition:.8s cubic-bezier(.2,.7,.3,1)}
+.rv.in{opacity:1;transform:none}
+.d1{transition-delay:.08s}.d2{transition-delay:.16s}.d3{transition-delay:.24s}.d4{transition-delay:.32s}
+
+/* HERO — gradiente petróleo escuro (identidade) */
+#hero{background:var(--grad);color:#fff;text-align:left;border-bottom:none}
+#hero .scene-tag{color:#7fd4e0}
+#hero .lede{color:#d6e0e6}
+.brand{display:flex;align-items:center;gap:14px;margin-bottom:30px}
+.brand .mark{width:46px;height:46px;border-radius:13px;background:linear-gradient(135deg,var(--cyan),var(--teal));position:relative;box-shadow:0 8px 22px rgba(23,162,184,.35)}
+.brand .mark::after{content:"";position:absolute;inset:13px 13px auto 13px;height:7px;border-radius:6px;background:var(--amber);box-shadow:0 11px 0 #ffffff55,0 -2px 0 #ffffff55}
+.brand .mono{letter-spacing:.2em;font-weight:700;color:#fff}
+h1.hero{font-size:clamp(2.8rem,7vw,5.6rem);font-family:'Fraunces',serif;letter-spacing:-.02em;color:#fff}
+.hl{position:relative;white-space:nowrap}
+.hl::after{content:"";position:absolute;left:-2%;right:-2%;bottom:.08em;height:.32em;background:var(--amber);opacity:.5;z-index:-1;border-radius:3px}
+
+/* kpi (hero, sobre fundo escuro) */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:46px;max-width:880px}
+.kpi{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);border-radius:14px;padding:22px 20px;backdrop-filter:blur(3px)}
+.kpi .n{font-family:'Fraunces',serif;font-size:clamp(1.6rem,3vw,2.4rem);font-weight:700;color:var(--amber);line-height:1}
+.kpi .l{font-size:.8rem;color:#cfdbe2;margin-top:8px}
+@media(max-width:760px){.kpis{grid-template-columns:repeat(2,1fr)}}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:26px;box-shadow:0 4px 14px rgba(15,32,39,.07)}
+.chart-wrap{position:relative;height:360px}
+.two{display:grid;grid-template-columns:1.15fr .85fr;gap:40px;align-items:center}
+@media(max-width:900px){.two{grid-template-columns:1fr;gap:26px}}
+h2.sec{font-size:clamp(1.8rem,3.6vw,2.9rem);margin-bottom:18px;max-width:18ch;color:var(--teal)}
+.key{background:linear-gradient(180deg,#fff,#f4f7f9);border-left:4px solid var(--cyan);border-radius:0 12px 12px 0;padding:18px 22px;margin-top:22px;max-width:62ch;box-shadow:0 2px 8px rgba(15,32,39,.05)}
+.key b{color:var(--teal)}
+.stat-row{display:flex;gap:36px;flex-wrap:wrap;margin-top:24px}
+.stat .big{font-family:'Fraunces',serif;font-size:2.2rem;font-weight:700}
+.stat .cap{font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+.fire{color:var(--red)} .health{color:var(--cyan)} .deep{color:var(--teal)} .pos{color:var(--green)}
+
+/* heatmap */
+.heat{border-collapse:collapse;width:100%;font-family:'Space Mono',monospace;font-size:.82rem}
+.heat th,.heat td{padding:11px 8px;text-align:center;border:2px solid var(--card)}
+.heat th{color:var(--muted);font-weight:700;font-size:.7rem;text-transform:uppercase}
+.heat td.lbl{text-align:left;color:var(--ink);font-weight:700}
+
+/* DOWNLOADS */
+#downloads{background:linear-gradient(180deg,var(--paper),#eef1f4)}
+.dl-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;margin-top:30px;max-width:1000px}
+.dl-card{display:flex;flex-direction:column;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:22px;box-shadow:0 4px 14px rgba(15,32,39,.07);transition:transform .25s ease,box-shadow .25s ease;text-decoration:none;color:inherit}
+.dl-card:hover{transform:translateY(-4px);box-shadow:0 12px 28px rgba(15,32,39,.13)}
+.dl-card .file{font-family:'Space Mono',monospace;font-weight:700;color:var(--teal);font-size:.95rem;word-break:break-all}
+.dl-card .desc{font-size:.86rem;color:var(--muted);flex:1}
+.dl-card .meta{font-family:'Space Mono',monospace;font-size:.72rem;color:var(--cyan);letter-spacing:.04em}
+.dl-card .go{margin-top:10px;display:inline-flex;align-items:center;gap:7px;font-size:.82rem;font-weight:600;color:var(--cyan)}
+.dl-card .go::after{content:"↓";font-size:1rem}
+.repo-btn{display:inline-flex;align-items:center;gap:9px;margin-top:28px;background:var(--grad);color:#fff;text-decoration:none;font-weight:600;padding:13px 24px;border-radius:10px;box-shadow:0 6px 18px rgba(15,32,39,.18);transition:transform .2s ease}
+.repo-btn:hover{transform:translateY(-2px)}
+.dl-note{font-size:.78rem;color:var(--muted);margin-top:18px;max-width:60ch}
+
+/* ROADMAP */
+#roadmap{background:var(--paper)}
+.road-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:18px;margin-top:30px;max-width:1040px}
+.road-card{background:var(--card);border:1px solid var(--line);border-top:4px solid var(--cyan);border-radius:12px;padding:24px;box-shadow:0 4px 14px rgba(15,32,39,.07);transition:transform .25s ease,box-shadow .25s ease}
+.road-card:hover{transform:translateY(-4px);box-shadow:0 12px 28px rgba(15,32,39,.13)}
+.road-card .phase{font-family:'Space Mono',monospace;font-size:.68rem;letter-spacing:.18em;text-transform:uppercase;color:var(--cyan);font-weight:700}
+.road-card h3{font-size:1.18rem;color:var(--teal);margin:9px 0 8px}
+.road-card p{font-size:.9rem;color:var(--muted);font-weight:300;line-height:1.55}
+
+footer{background:var(--grad);color:#aebcc4;text-align:center;padding:70px 8vw;border:none;min-height:auto}
+footer a{color:var(--cyan);text-decoration:none;font-weight:600}
+.pill{display:inline-block;background:rgba(255,255,255,.1);color:#cfe3e8;font-family:'Space Mono',monospace;font-size:.72rem;padding:5px 12px;border-radius:20px;letter-spacing:.06em}
+.src{font-size:.74rem;color:#7f939c;margin-top:8px}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<nav id="dots"></nav>
+
+<!-- 1 · HERO -->
+<section id="hero" data-name="Início">
+  <div class="brand rv"><div class="mark"></div><span class="mono" id="wordmark">BREATHALERT BR</span></div>
+  <div class="scene-tag rv d1">Global Solution 2026 · Ciência de Dados</div>
+  <h1 class="hero rv d1">Quando a <span class="hl">fumaça</span><br>vira internação.</h1>
+  <p class="lede rv d2" style="margin-top:26px">Cruzamos uma década de focos de queimada do INPE com as internações
+  respiratórias do SUS para descobrir <b>onde</b>, <b>quando</b> e <b>com que atraso</b>
+  o fogo cobra o seu preço na saúde dos brasileiros.</p>
+  <div class="kpis">
+    <div class="kpi rv d1"><div class="n" id="k-focos">—</div><div class="l">focos de queimada<br>analisados (INPE)</div></div>
+    <div class="kpi rv d2"><div class="n" id="k-inter">—</div><div class="l">internações<br>respiratórias (SUS)</div></div>
+    <div class="kpi rv d3"><div class="n">27</div><div class="l">estados<br>· 120 meses</div></div>
+    <div class="kpi rv d4"><div class="n">2016<span style="font-size:1.2rem">—</span>25</div><div class="l">série histórica<br>completa</div></div>
+  </div>
+  <div class="mono rv d4" style="margin-top:50px;font-size:.74rem;color:#9fc4cc">↓ role para acompanhar a investigação</div>
+</section>
+
+<!-- 2 · PROBLEMA -->
+<section id="s2" data-name="O problema">
+  <div class="scene-tag rv">Cena 01 · O problema</div>
+  <h2 class="sec rv d1">A fumaça não respeita fronteiras — nem pulmões.</h2>
+  <p class="lede rv d2">As queimadas liberam material particulado que agrava asma, bronquite e DPOC.
+  Mas o impacto na saúde é difícil de enxergar nos números: ele se esconde atrás do
+  inverno, das epidemias sazonais e do tamanho da população. Nossa missão foi
+  <b>isolar o sinal da fumaça</b> em meio a esse ruído.</p>
+  <div class="stat-row rv d3">
+    <div class="stat"><div class="big fire" id="k-focos2">—</div><div class="cap">focos em 10 anos</div></div>
+    <div class="stat"><div class="big health" id="k-inter2">—</div><div class="cap">internações no período</div></div>
+    <div class="stat"><div class="big deep">2</div><div class="cap">bases públicas cruzadas</div></div>
+  </div>
+</section>
+
+<!-- 3 · QUEIMADAS -->
+<section id="s3" data-name="As queimadas">
+  <div class="scene-tag rv">Cena 02 · A base de queimadas</div>
+  <div class="two">
+    <div class="card rv d1"><div class="chart-wrap"><canvas id="chTopFocos"></canvas></div></div>
+    <div>
+      <h2 class="sec rv d1">Poucos estados<br>concentram o fogo.</h2>
+      <p class="lede rv d2">A distribuição é fortemente desigual: <b>Mato Grosso e Pará</b> sozinhos
+      respondem por quase 40% de todos os focos da série — a marca da fronteira agrícola
+      sobre Amazônia e Cerrado.</p>
+      <div class="key rv d3">A seca acumulada (dias sem chuva) prevê o fogo melhor
+      que o próprio índice de risco oficial — correlação de <b>0,76</b> contra 0,57.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 4 · O DESCOMPASSO -->
+<section id="s4" data-name="O descompasso">
+  <div class="scene-tag rv">Cena 03 · A descoberta</div>
+  <h2 class="sec rv d1">Os dois calendários não batem.</h2>
+  <p class="lede rv d2">Aqui está o coração da análise. As <b class="fire">queimadas</b> picam na seca
+  (ago–out). As <b class="health">internações</b> picam no inverno (abr–jun). As duas ondas estão
+  <b>fora de fase</b> — por isso, no mesmo mês, a correlação é praticamente nula.</p>
+  <div class="card rv d3" style="margin-top:30px"><div class="chart-wrap" style="height:380px"><canvas id="chSazonal"></canvas></div></div>
+  <div class="key rv d4">Se olhássemos só o mesmo mês, concluiríamos que não há relação.
+  Seria um <b>erro</b>: o efeito da fumaça não é instantâneo — ele aparece com atraso.</div>
+</section>
+
+<!-- 5 · O SINAL DEFASADO -->
+<section id="s5" data-name="O sinal">
+  <div class="scene-tag rv">Cena 04 · O sinal escondido</div>
+  <div class="two">
+    <div>
+      <h2 class="sec rv d1">Removida a sazonalidade,<br>o sinal aparece.</h2>
+      <p class="lede rv d2">Ao medir <b>anomalias</b> (o quanto cada mês fugiu do seu normal) e
+      aplicar <b>defasagem</b>, a correlação deixa de ser negativa e vira positiva —
+      crescendo com o atraso e mais forte nos estados de queimada intensa.</p>
+      <div class="key rv d3">Padrão coerente com a fisiologia: a fumaça de hoje agrava
+      quadros nos <b>meses seguintes</b>, não no mesmo dia. Sinal fraco, mas consistente.</div>
+    </div>
+    <div class="card rv d2"><div class="chart-wrap"><canvas id="chLag"></canvas></div></div>
+  </div>
+</section>
+
+<!-- 6 · ONDE -->
+<section id="s6" data-name="Onde">
+  <div class="scene-tag rv">Cena 05 · Onde o sinal mora</div>
+  <h2 class="sec rv d1">O efeito tem endereço: o Sudeste.</h2>
+  <p class="lede rv d2">A média nacional dilui o sinal. Recortando por região, ele se concentra no
+  <b>Sudeste</b> (pico em 3 meses de defasagem) — não porque a fumaça lá seja pior, mas porque a
+  grande população permite <b>medir</b> com menos ruído. Onde dá para medir bem, o efeito aparece.</p>
+  <div class="card rv d3" style="margin-top:26px;overflow-x:auto">
+    <table class="heat" id="heatTable"></table>
+  </div>
+</section>
+
+<!-- 7 · TESTE DE HIPÓTESE -->
+<section id="s7" data-name="A prova">
+  <div class="scene-tag rv">Cena 06 · A prova estatística</div>
+  <div class="two">
+    <div class="card rv d2"><div class="chart-wrap"><svg id="chTeste" viewBox="0 0 480 360" preserveAspectRatio="xMidYMid meet" style="width:100%;height:100%;display:block"></svg></div></div>
+    <div>
+      <h2 class="sec rv d1">No Sudeste,<br>a estatística confirma.</h2>
+      <p class="lede rv d2">Teste de Mann-Whitney: meses de queimada intensa são seguidos,
+      <b>3 meses depois</b>, por internações acima do normal.</p>
+      <div class="stat-row rv d3">
+        <div class="stat"><div class="big fire">+971</div><div class="cap">anomalia após<br>queimada alta</div></div>
+        <div class="stat"><div class="big" style="color:var(--muted)">+52</div><div class="cap">após queimada<br>baixa</div></div>
+        <div class="stat"><div class="big pos">p=0,026</div><div class="cap">rejeita H₀<br>(significativo)</div></div>
+      </div>
+      <div class="key rv d4">Achado <b>exploratório e honesto</b>: localizado, não nacional.
+      Pede confirmação com dados municipais e diários.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 8 · A SOLUÇÃO -->
+<section id="s8" data-name="A solução" style="background:linear-gradient(180deg,var(--paper),#e9eef1)">
+  <div class="scene-tag rv">Cena 07 · O produto</div>
+  <h2 class="sec rv d1" style="max-width:24ch">A fraqueza do sinal <span class="hl">é</span> o argumento do BreathAlert BR.</h2>
+  <p class="lede rv d2" style="max-width:64ch">O impacto da fumaça se dilui nas estatísticas nacionais — fica quase invisível
+  justamente onde as decisões de saúde são tomadas. Um alerta eficaz precisa agir
+  <b>localmente e antecipado</b>, usando a seca (que sobe <i>antes</i> do fogo) como gatilho
+  precoce, para proteger as populações antes que o efeito apareça — tarde — nas internações.</p>
+  <div class="stat-row rv d3">
+    <div class="stat"><div class="big deep">Local</div><div class="cap">por estado/região, não média nacional</div></div>
+    <div class="stat"><div class="big health">Antecipado</div><div class="cap">gatilho na seca, antes do fogo</div></div>
+    <div class="stat"><div class="big fire">Preventivo</div><div class="cap">alerta à saúde antes da internação</div></div>
+  </div>
+</section>
+
+<!-- 8b · ROADMAP / PRÓXIMOS PASSOS -->
+<section id="roadmap" data-name="Próximos passos">
+  <div class="scene-tag rv">Cena 08 · O que vem a seguir</div>
+  <h2 class="sec rv d1" style="max-width:24ch">Este é o começo, não o ponto final.</h2>
+  <p class="lede rv d2">O estudo atual trabalha em escala mensal e estadual — suficiente para revelar o sinal,
+  grosseiro demais para acionar um alerta. Os próximos passos miram justamente em fechar essa lacuna
+  e transformar a análise em uma ferramenta de uso real.</p>
+  <div class="road-grid rv d3">
+    <div class="road-card" style="border-top-color:var(--cyan)">
+      <div class="phase">Passo 01 · Granularidade</div>
+      <h3>Dados municipais e diários</h3>
+      <p>Descer da escala estadual/mensal para município e dia, onde a fumaça de fato age — superando a principal limitação do estudo atual.</p>
+    </div>
+    <div class="road-card" style="border-top-color:var(--red)">
+      <div class="phase">Passo 02 · Previsão</div>
+      <h3>Modelo preditivo sazonal</h3>
+      <p>Prophet ou LSTM para antecipar os picos de risco a partir da seca acumulada, dias antes de o fogo aparecer.</p>
+    </div>
+    <div class="road-card" style="border-top-color:var(--green)">
+      <div class="phase">Passo 03 · Ar</div>
+      <h3>Qualidade do ar (PM2.5)</h3>
+      <p>Integrar material particulado (sensor MERRA-2 da NASA e estações locais) para ligar a fumaça diretamente à exposição.</p>
+    </div>
+    <div class="road-card" style="border-top-color:var(--teal)">
+      <div class="phase">Passo 04 · Índice</div>
+      <h3>IRSQ por município</h3>
+      <p>Um Índice de Risco à Saúde por Queimadas com níveis de alerta — de baixo a crítico — para cada cidade.</p>
+    </div>
+    <div class="road-card" style="border-top-color:var(--amber)">
+      <div class="phase">Passo 05 · Acesso</div>
+      <h3>API pública e dashboard</h3>
+      <p>Disponibilizar o índice como serviço aberto e um painel para secretarias de saúde e Defesa Civil.</p>
+    </div>
+    <div class="road-card" style="border-top-color:var(--petrol)">
+      <div class="phase">Passo 06 · Validação</div>
+      <h3>Teste em campo</h3>
+      <p>Parceria com secretarias municipais para validar os alertas com dados reais de atendimento e calibrar os limiares.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 9 · DOWNLOADS -->
+<section id="downloads" data-name="Dados">
+  <div class="scene-tag rv">Acesso aberto</div>
+  <h2 class="sec rv d1" style="max-width:22ch">Baixe os dados e reproduza o estudo.</h2>
+  <p class="lede rv d2">Todas as bases consolidadas e o notebook completo estão disponíveis para download.
+  Transparência total: pegue os arquivos, rode a análise e confira cada número.</p>
+  <div class="dl-grid rv d3" id="dlGrid"></div>
+  <a class="repo-btn rv d3" id="repoBtn" href="#" target="_blank" rel="noopener">Ver repositório completo no GitHub</a>
+  <p class="dl-note rv d4">Os links apontam para arquivos ao lado deste <code>index.html</code>.
+  Se você hospedar os dados em outra pasta (ex.: <code>dados/</code>), ajuste a constante
+  <code>DL_BASE</code> no início do script.</p>
+</section>
+
+<footer id="end" data-name="Fim">
+  <span class="pill" id="brandPill">BreathAlert BR · Global Solution 2026</span>
+  <h2 style="color:#fff;font-size:clamp(1.6rem,4vw,2.6rem);margin:24px auto 14px;max-width:20ch">Dos dados à decisão que protege quem respira.</h2>
+  <p style="max-width:54ch;margin:0 auto;color:#9fb3bb;font-weight:300">Análise completa, código e metodologia disponíveis no repositório do projeto.</p>
+  <p class="src" style="margin-top:30px">Fontes: INPE/BDQueimadas · DATASUS/SIH-SUS · IBGE/SIDRA (tabela 6579)</p>
+</footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  // ===== Configuração rápida ==========================================
+  const BRAND      = "BreathAlert BR";        // nome exibido
+  const BRAND_MARK = "BREATHALERT BR";        // logo (maiúsculas)
+  const DL_BASE    = "";                       // ex.: "dados/" se os CSVs ficarem numa subpasta
+  const REPO_URL   = "https://github.com/SauloSapucaia";  // troque pela URL do repositório do BreathAlert BR
+  // ====================================================================
+
+  const $ = id => document.getElementById(id);
+  const D = {"total_focos":41139866,"total_internacoes":11528960,"anos":"2016–2025","estados":27,"saz_focos":[1.5,1.1,1.4,0.9,2.0,3.7,6.6,22.5,29.8,18.2,9.0,3.5],"saz_inter":[6.7,6.4,8.7,9.4,10.6,10.0,9.3,8.6,8.1,8.0,7.4,6.8],"meses":["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"],"top_focos":{"labels":["MATO GROSSO","PARÁ","MARANHÃO","TOCANTINS","AMAZONAS","PIAUÍ"],"valores":[7667747,7509123,4140098,3037565,2956900,2288461]},"lag_brasil":[0.012,0.003,0.004,0.031,0.049],"lag_fogo":[0.02,0.014,0.007,0.047,0.066],"heat_regiao":{"Norte":[0.038,0.032,0.027,0.053],"Centro-Oeste":[-0.013,-0.017,-0.029,0.036],"Nordeste":[0.029,0.017,0.025,0.018],"Sudeste":[0.067,0.061,0.076,0.154],"Sul":[-0.142,-0.155,-0.162,-0.153]},"sudeste_p":0.0263,"sudeste_alta":971.8,"sudeste_baixa":52.0,"teste":{"p":0.0263,"alta":{"wlo":-9436.7,"q1":-2418.3,"med":971.8,"q3":2329.9,"whi":7202.8,"n":47},"baixa":{"wlo":-2101.5,"q1":-519.7,"med":52.0,"q3":741.6,"whi":2559.6,"n":421}}};
+  const FMT = n => n>=1e6 ? (n/1e6).toFixed(1)+' mi' : n>=1e3 ? (n/1e3).toFixed(0)+' mil' : n;
+
+  // ----- Marca / títulos ---------------------------------------------
+  document.title = BRAND + " · Queimadas e Saúde Respiratória no Brasil";
+  if ($('wordmark'))  $('wordmark').textContent = BRAND_MARK;
+  if ($('brandPill')) $('brandPill').textContent = BRAND + " · Global Solution 2026";
+  if ($('repoBtn'))   $('repoBtn').href = REPO_URL;
+
+  // ----- KPIs --------------------------------------------------------
+  const setTxt = (id,v) => { const el=$(id); if(el) el.textContent=v; };
+  setTxt('k-focos',  (D.total_focos/1e6).toFixed(1)+' mi');
+  setTxt('k-inter',  (D.total_internacoes/1e6).toFixed(1)+' mi');
+  setTxt('k-focos2', (D.total_focos/1e6).toFixed(1)+' mi');
+  setTxt('k-inter2', (D.total_internacoes/1e6).toFixed(1)+' mi');
+
+  // ----- Revelação ao rolar (configurada ANTES dos gráficos) ----------
+  const secs = [...document.querySelectorAll('section,footer')];
+  const dots = $('dots');
+  secs.forEach(s => { const a=document.createElement('a'); a.href='#'+s.id; a.title=s.dataset.name||''; dots.appendChild(a); });
+  const dotEls = [...dots.children];
+
+  addEventListener('scroll', () => {
+    const h = document.documentElement;
+    $('progress').style.width = (h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';
+  });
+
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver(es => es.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.querySelectorAll('.rv').forEach(r => r.classList.add('in'));
+        const i = secs.indexOf(e.target);
+        dotEls.forEach((d,j) => d.classList.toggle('on', j===i));
+      }
+    }), { threshold:.35 });
+    secs.forEach(s => io.observe(s));
+  } else {
+    document.querySelectorAll('.rv').forEach(r => r.classList.add('in'));
+  }
+  // rede de segurança: se algo falhar, garante que o conteúdo apareça
+  setTimeout(() => document.querySelectorAll('.rv:not(.in)').forEach(r => {
+    if (r.getBoundingClientRect().top < innerHeight) r.classList.add('in');
+  }), 1200);
+
+  // ----- Seção de downloads ------------------------------------------
+  const ARQUIVOS = [
+    {file:"queimadas_consolidado.csv",       desc:"Focos de queimada por estado/ano/mês.",      meta:"CSV · 244 KB · 3.240 linhas", fonte:"INPE"},
+    {file:"datasus_consolidado.csv",         desc:"Internações respiratórias por estado/mês.",   meta:"CSV · 52 KB · 3.240 linhas",  fonte:"SUS"},
+    {file:"populacao_consolidado.csv",       desc:"População estimada por UF e ano.",            meta:"CSV · 8 KB · 270 linhas",     fonte:"IBGE"},
+    {file:"queimadas_bioma_consolidado.csv", desc:"Focos agregados por bioma.",                  meta:"CSV · 4 KB · 6 linhas",       fonte:"INPE"},
+    {file:"projeto.ipynb",                   desc:"Notebook completo: análise, gráficos e conclusões.", meta:"Jupyter · 1.4 MB",     fonte:"Python"}
+  ];
+  const grid = $('dlGrid');
+  if (grid) {
+    grid.innerHTML = ARQUIVOS.map(a => `
+      <a class="dl-card" href="${DL_BASE+a.file}" download>
+        <div class="file">${a.file}</div>
+        <div class="desc">${a.desc}</div>
+        <div class="meta">${a.meta} · ${a.fonte}</div>
+        <span class="go">Baixar arquivo</span>
+      </a>`).join('');
+  }
+
+  // ----- Teste de hipótese: boxplot em SVG (sem dependências) ---------
+  (function(){
+    const sv = $('chTeste'); if (!sv || !D.teste) return;
+    const T = D.teste, W=480, H=360, mT=58, mB=56, mL=58, mR=20;
+    const pL=mL, pR=W-mR, pT=mT, pB=H-mB, pW=pR-pL, pH=pB-pT;
+    let lo=Math.min(T.alta.wlo,T.baixa.wlo), hi=Math.max(T.alta.whi,T.baixa.whi);
+    const pad=(hi-lo)*0.08; lo-=pad; hi+=pad;
+    const Y = v => pT + (hi-v)/(hi-lo)*pH;
+    const fmt = v => { if(Math.round(v)===0) return '0'; if(Math.abs(v)>=1000){const k=Math.round(v/100)/10; return (v>0?'+':'')+k+'k';} return (v>0?'+':'')+Math.round(v); };
+    let s='';
+    s+=`<text x="${W/2}" y="25" text-anchor="middle" font-family="'Fraunces',serif" font-size="15" font-weight="700" fill="#0f2027">Sudeste · internação (anomalia) 3 meses depois</text>`;
+    s+=`<text x="${W/2}" y="43" text-anchor="middle" font-family="'Space Mono',monospace" font-size="10" fill="#6b7785">Mann-Whitney · H₁: alta &gt; baixa · p = 0,026 · rejeita H₀</text>`;
+    for(let t=Math.ceil(lo/5000)*5000; t<=hi; t+=5000){ const y=Y(t);
+      s+=`<line x1="${pL}" y1="${y}" x2="${pR}" y2="${y}" stroke="#eef1f4" stroke-width="1"/>`;
+      s+=`<text x="${pL-7}" y="${y+3.5}" text-anchor="end" font-size="10" fill="#6b7785" font-family="'Outfit',sans-serif">${fmt(t)}</text>`;
+    }
+    const y0=Y(0);
+    s+=`<line x1="${pL}" y1="${y0}" x2="${pR}" y2="${y0}" stroke="#28C76F" stroke-width="1.5" stroke-dasharray="5 4"/>`;
+    s+=`<text x="${pR-3}" y="${y0-6}" text-anchor="end" font-size="9.5" fill="#1f9e58" font-family="'Space Mono',monospace">internação normal</text>`;
+    function drawBox(cx,d,fill,stroke,med,label){
+      const bw=78, yq1=Y(d.q1), yq3=Y(d.q3), ym=Y(d.med), ylo=Y(d.wlo), yhi=Y(d.whi); let g='';
+      g+=`<line x1="${cx}" y1="${yhi}" x2="${cx}" y2="${ylo}" stroke="${stroke}" stroke-width="1.5"/>`;
+      g+=`<line x1="${cx-16}" y1="${yhi}" x2="${cx+16}" y2="${yhi}" stroke="${stroke}" stroke-width="1.5"/>`;
+      g+=`<line x1="${cx-16}" y1="${ylo}" x2="${cx+16}" y2="${ylo}" stroke="${stroke}" stroke-width="1.5"/>`;
+      g+=`<rect x="${cx-bw/2}" y="${yq3}" width="${bw}" height="${yq1-yq3}" fill="${fill}" stroke="${stroke}" stroke-width="1.5" rx="3"/>`;
+      g+=`<line x1="${cx-bw/2}" y1="${ym}" x2="${cx+bw/2}" y2="${ym}" stroke="${med}" stroke-width="3"/>`;
+      g+=`<text x="${cx+bw/2+6}" y="${ym+3.5}" font-size="11" font-weight="700" fill="${med}" font-family="'Space Mono',monospace">${fmt(d.med)}</text>`;
+      g+=`<text x="${cx}" y="${pB+22}" text-anchor="middle" font-size="11" font-weight="600" fill="#2c5364" font-family="'Outfit',sans-serif">${label}</text>`;
+      g+=`<text x="${cx}" y="${pB+38}" text-anchor="middle" font-size="9.5" fill="#6b7785" font-family="'Space Mono',monospace">n = ${d.n}</text>`;
+      return g;
+    }
+    s+=drawBox(pL+pW*0.32, T.alta,  'rgba(234,84,85,.22)', '#EA5455', '#b3322f', 'Após queimada ALTA');
+    s+=drawBox(pL+pW*0.70, T.baixa, '#eef1f4',              '#9aa6ad', '#566169', 'Após queimada baixa');
+    sv.innerHTML = s;
+  })();
+
+  // ----- Chart.js ----------------------------------------------------
+  if (typeof Chart === 'undefined') return;  // CDN indisponível: texto/KPIs já aparecem
+  Chart.defaults.font.family = "'Outfit',sans-serif";
+  Chart.defaults.color = "#6b7785";
+  Chart.defaults.responsive = true;
+  Chart.defaults.maintainAspectRatio = false;   // deixa o container (CSS) controlar a altura em qualquer tela
+  const TEAL='#2c5364', CYAN='#17a2b8', RED='#EA5455', GREEN='#28C76F', INK='#0f2027';
+  const mk = (id, cfg) => { const c=$(id); if(c){ try{ new Chart(c,cfg);}catch(e){console.error(e);} } };
+  const siglas = {'MATO GROSSO':'MT','PARÁ':'PA','MARANHÃO':'MA','TOCANTINS':'TO','AMAZONAS':'AM','PIAUÍ':'PI'};
+
+  // 1) Top focos
+  mk('chTopFocos', {type:'bar',
+    data:{labels:D.top_focos.labels.map(l=>siglas[l]||l),
+      datasets:[{data:D.top_focos.valores,backgroundColor:RED,borderRadius:6}]},
+    options:{indexAxis:'y',plugins:{legend:{display:false},title:{display:true,text:'Top 6 estados por focos de queimada',font:{size:13,family:"'Fraunces',serif"},color:INK}},
+      scales:{x:{ticks:{callback:v=>FMT(v)},grid:{color:'#eef1f4'}},y:{grid:{display:false}}}}});
+
+  // 2) Sazonalidade dupla
+  mk('chSazonal', {type:'line',
+    data:{labels:D.meses,datasets:[
+      {label:'Queimadas (% do ano)',data:D.saz_focos,borderColor:RED,backgroundColor:'rgba(234,84,85,.10)',fill:true,tension:.4,borderWidth:3,pointRadius:3},
+      {label:'Internações (% do ano)',data:D.saz_inter,borderColor:CYAN,backgroundColor:'rgba(23,162,184,.10)',fill:true,tension:.4,borderWidth:3,pointRadius:3}
+    ]},
+    options:{plugins:{legend:{position:'top'},title:{display:true,text:'Sazonalidade: os picos não coincidem',font:{size:14,family:"'Fraunces',serif"},color:INK}},
+      scales:{y:{ticks:{callback:v=>v+'%'},grid:{color:'#eef1f4'}},x:{grid:{display:false}}}}});
+
+  // 3) Lag
+  mk('chLag', {type:'line',
+    data:{labels:['0','1','2','3','4'],datasets:[
+      {label:'Brasil (27 estados)',data:D.lag_brasil,borderColor:CYAN,backgroundColor:CYAN,borderWidth:2.5,tension:.3,pointRadius:4},
+      {label:'Norte + Centro-Oeste',data:D.lag_fogo,borderColor:RED,backgroundColor:RED,borderWidth:3,tension:.3,pointRadius:4}
+    ]},
+    options:{plugins:{legend:{position:'top'},title:{display:true,text:'Correlação por defasagem (anomalias)',font:{size:13,family:"'Fraunces',serif"},color:INK}},
+      scales:{x:{title:{display:true,text:'meses de defasagem'},grid:{display:false}},y:{beginAtZero:true,suggestedMax:0.075,ticks:{callback:v=>(+v).toFixed(3)},grid:{color:'#eef1f4'}}}}});
+
+  // 4) Heatmap regional (verde = positivo, vermelho = negativo)
+  function heatColor(v){
+    const t = Math.max(-1, Math.min(1, v/0.16));
+    if (t>=0) return `rgba(40,199,111,${0.12+t*0.7})`;
+    return `rgba(234,84,85,${0.12+(-t)*0.7})`;
+  }
+  let html = '<tr><th class="lbl">Região</th><th>lag 0</th><th>lag 1</th><th>lag 2</th><th>lag 3</th></tr>';
+  for (const [reg,vals] of Object.entries(D.heat_regiao)) {
+    html += `<tr><td class="lbl">${reg}</td>` +
+      vals.map(v=>`<td style="background:${heatColor(v)};color:${Math.abs(v)>0.09?'#fff':'#0f2027'}">${v>0?'+':''}${v.toFixed(3)}</td>`).join('') +
+      '</tr>';
+  }
+  const ht = $('heatTable'); if (ht) ht.innerHTML = html;
+
+  // 5) Teste de hipótese → boxplot SVG (renderizado acima, sem Chart.js)
+});
+</script>
+</body>
+</html>
