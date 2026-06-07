@@ -7,6 +7,9 @@ Global Solution 2026 · Ciência de Dados
 Cruzamento entre os focos de queimada do **INPE/BDQueimadas** e as internações
 respiratórias do **SUS (DATASUS/SIH)**, por estado e mês, para entender **se**, **onde**,
 **quando** e **com que defasagem** o fogo se reflete na saúde da população brasileira.
+Ao todo, **4 bases públicas** são cruzadas — queimadas (INPE), internações (SUS),
+população e área plantada (IBGE) —, o que permite construir **indicadores normalizados**
+(focos por 1.000 ha de lavoura, internações e focos por 100 mil habitantes).
 
 > O "**BR**" no nome deixa explícito o recorte do estudo: dados públicos brasileiros,
 > de todos os 27 estados, ao longo de uma década.
@@ -15,14 +18,18 @@ respiratórias do **SUS (DATASUS/SIH)**, por estado e mês, para entender **se**
 
 ## 🔎 Principais achados
 
-- **Os calendários não coincidem.** Queimadas picam na seca (ago–out); internações
-  respiratórias picam no inverno (abr–jun). No mesmo mês, a correlação é nula.
+- **Os calendários não coincidem.** Queimadas sobem na seca (ago–out); internações
+  respiratórias sobem no inverno (abr–jun). No mesmo mês, a correlação é nula.
 - **O sinal existe, mas é defasado.** Removida a sazonalidade (anomalias) e aplicada
   defasagem temporal, surge uma associação positiva que cresce com o atraso — coerente
   com o efeito cumulativo da fumaça sobre a saúde.
 - **O efeito tem endereço.** É mais nítido no **Sudeste**, onde a grande população permite
   medir as variações com menos ruído. Lá, o teste de **Mann-Whitney** confirma (p = 0,026)
   que meses de queimada intensa são seguidos, ~3 meses depois, por internações acima do normal.
+- **Fogo não é (só) agricultura.** A área plantada se associa positivamente aos focos
+  (Spearman 0,47), mas de forma moderada. Normalizando por **focos / 1.000 ha de lavoura**,
+  os estados amazônicos disparam (AM ≈ 201, AC ≈ 77) e o Sul afunda (RS ≈ 0,2): o fogo do
+  Norte é de **abertura de área**, não de manejo agrícola consolidado.
 
 ## 📁 Estrutura do repositório
 
@@ -34,6 +41,7 @@ breathalert-br/
 │   ├── queimadas_consolidado.csv       # focos por estado/ano/mês (INPE)        · 3.240 linhas
 │   ├── datasus_consolidado.csv         # internações respiratórias (SUS)        · 3.240 linhas
 │   ├── populacao_consolidado.csv       # população por UF/ano (IBGE)            ·   270 linhas
+│   ├── area_agricola_consolidado.csv   # área plantada por UF/ano (IBGE/PAM)     ·   243 linhas
 │   └── queimadas_bioma_consolidado.csv # focos agregados por bioma (INPE)       ·     6 linhas
 ├── site/
 │   └── index.html                      # site de apresentação (storytelling dos dados)
@@ -62,12 +70,13 @@ do `<script>` (`DL_BASE`, `REPO_URL`) para apontar para este repositório.
 | Focos de queimada | [INPE / BDQueimadas](https://terrabrasilis.dpi.inpe.br/queimadas/) |
 | Internações respiratórias | [DATASUS / SIH-SUS](https://datasus.saude.gov.br/) |
 | População estimada | [IBGE / SIDRA tabela 6579](https://sidra.ibge.gov.br/tabela/6579) |
+| Área plantada (lavouras) | [IBGE / PAM · SIDRA tabela 5457](https://sidra.ibge.gov.br/tabela/5457) |
 
 ## ⚠️ Limitações
 
 Análise em escala mensal e estadual (grosseira para um fenômeno local); achados por
 recorte são exploratórios; o ano de 2025 pode estar levemente subestimado pela
-defasagem de processamento do SIH.
+defasagem de processamento do SIH; a área plantada (PAM/IBGE) cobre **2016–2024** (a safra de 2025 ainda não foi divulgada), então os indicadores por hectare usam esse intervalo.
 
 ## 🚀 Próximos passos
 
