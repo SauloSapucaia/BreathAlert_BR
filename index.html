@@ -136,7 +136,7 @@ footer a{color:var(--cyan);text-decoration:none;font-weight:600}
   <div class="stat-row rv d3">
     <div class="stat"><div class="big fire" id="k-focos2">—</div><div class="cap">focos em 10 anos</div></div>
     <div class="stat"><div class="big health" id="k-inter2">—</div><div class="cap">internações no período</div></div>
-    <div class="stat"><div class="big deep">2</div><div class="cap">bases públicas cruzadas</div></div>
+    <div class="stat"><div class="big deep">4</div><div class="cap">bases públicas cruzadas</div></div>
   </div>
 </section>
 
@@ -156,12 +156,28 @@ footer a{color:var(--cyan);text-decoration:none;font-weight:600}
   </div>
 </section>
 
+<!-- 3b · FRONTEIRA AGRÍCOLA -->
+<section id="agro" data-name="Fronteira agrícola">
+  <div class="scene-tag rv">Cena 02b · A pista agrícola</div>
+  <div class="two">
+    <div class="card rv d1"><div class="chart-wrap" style="height:400px"><svg id="chAgro" viewBox="0 0 720 400" preserveAspectRatio="xMidYMid meet" style="width:100%;height:100%;display:block"></svg></div></div>
+    <div>
+      <h2 class="sec rv d1">Mais lavoura não significa,<br>sozinha, mais fogo.</h2>
+      <p class="lede rv d2">Cruzando os focos com a <b>área plantada</b> de cada estado (IBGE/PAM · média 2016–2024), a associação é
+      positiva, mas <b>moderada</b> — Spearman <b>0,47</b>. O <b class="pos">Sul</b> planta muito e queima pouco;
+      o fogo se concentra onde a lavoura <b>avança sobre biomas secos</b> (Cerrado e Amazônia).</p>
+      <div class="key rv d3">A área plantada explica <b>parte</b> do fogo, não tudo. O gatilho não é plantar —
+      é a fronteira agrícola encontrando a seca. Mais um motivo para agir <b>localmente</b>.</div>
+    </div>
+  </div>
+</section>
+
 <!-- 4 · O DESCOMPASSO -->
 <section id="s4" data-name="O descompasso">
   <div class="scene-tag rv">Cena 03 · A descoberta</div>
   <h2 class="sec rv d1">Os dois calendários não batem.</h2>
-  <p class="lede rv d2">Aqui está o coração da análise. As <b class="fire">queimadas</b> picam na seca
-  (ago–out). As <b class="health">internações</b> picam no inverno (abr–jun). As duas ondas estão
+  <p class="lede rv d2">Aqui está o coração da análise. As <b class="fire">queimadas</b> sobem na seca
+  (ago–out). As <b class="health">internações</b> sobem no inverno (abr–jun). As duas ondas estão
   <b>fora de fase</b> — por isso, no mesmo mês, a correlação é praticamente nula.</p>
   <div class="card rv d3" style="margin-top:30px"><div class="chart-wrap" style="height:380px"><canvas id="chSazonal"></canvas></div></div>
   <div class="key rv d4">Se olhássemos só o mesmo mês, concluiríamos que não há relação.
@@ -276,20 +292,20 @@ footer a{color:var(--cyan);text-decoration:none;font-weight:600}
 <section id="downloads" data-name="Dados">
   <div class="scene-tag rv">Acesso aberto</div>
   <h2 class="sec rv d1" style="max-width:22ch">Baixe os dados e reproduza o estudo.</h2>
-  <p class="lede rv d2">Todas as bases consolidadas e o notebook completo estão disponíveis para download.
+  <p class="lede rv d2">As <b>4 bases públicas</b> consolidadas (INPE, SUS, IBGE população e IBGE/PAM área),
+  o recorte por bioma e o notebook completo estão disponíveis para download.
   Transparência total: pegue os arquivos, rode a análise e confira cada número.</p>
   <div class="dl-grid rv d3" id="dlGrid"></div>
   <a class="repo-btn rv d3" id="repoBtn" href="#" target="_blank" rel="noopener">Ver repositório completo no GitHub</a>
-  <p class="dl-note rv d4">Os links apontam para arquivos ao lado deste <code>index.html</code>.
-  Se você hospedar os dados em outra pasta (ex.: <code>dados/</code>), ajuste a constante
-  <code>DL_BASE</code> no início do script.</p>
+  <p class="dl-note rv d4">Os arquivos estão hospedados no repositório do projeto no GitHub
+  (<code>SauloSapucaia/BreathAlert_BR</code>): as bases em <code>/dados</code> e o notebook na raiz.</p>
 </section>
 
 <footer id="end" data-name="Fim">
   <span class="pill" id="brandPill">BreathAlert BR · Global Solution 2026</span>
   <h2 style="color:#fff;font-size:clamp(1.6rem,4vw,2.6rem);margin:24px auto 14px;max-width:20ch">Dos dados à decisão que protege quem respira.</h2>
   <p style="max-width:54ch;margin:0 auto;color:#9fb3bb;font-weight:300">Análise completa, código e metodologia disponíveis no repositório do projeto.</p>
-  <p class="src" style="margin-top:30px">Fontes: INPE/BDQueimadas · DATASUS/SIH-SUS · IBGE/SIDRA (tabela 6579)</p>
+  <p class="src" style="margin-top:30px">Fontes: INPE/BDQueimadas · DATASUS/SIH-SUS · IBGE/SIDRA pop. (tab. 6579) · IBGE/PAM área (tab. 5457)</p>
 </footer>
 
 <script>
@@ -297,12 +313,13 @@ document.addEventListener('DOMContentLoaded', function () {
   // ===== Configuração rápida ==========================================
   const BRAND      = "BreathAlert BR";        // nome exibido
   const BRAND_MARK = "BREATHALERT BR";        // logo (maiúsculas)
-  const DL_BASE    = "";                       // ex.: "dados/" se os CSVs ficarem numa subpasta
-  const REPO_URL   = "https://github.com/SauloSapucaia";  // troque pela URL do repositório do BreathAlert BR
+  const REPO_URL   = "https://github.com/SauloSapucaia/BreathAlert_BR";          // repositório do projeto
+  const RAW_BASE   = "https://github.com/SauloSapucaia/BreathAlert_BR/blob/main/";
   // ====================================================================
 
   const $ = id => document.getElementById(id);
   const D = {"total_focos":41139866,"total_internacoes":11528960,"anos":"2016–2025","estados":27,"saz_focos":[1.5,1.1,1.4,0.9,2.0,3.7,6.6,22.5,29.8,18.2,9.0,3.5],"saz_inter":[6.7,6.4,8.7,9.4,10.6,10.0,9.3,8.6,8.1,8.0,7.4,6.8],"meses":["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"],"top_focos":{"labels":["MATO GROSSO","PARÁ","MARANHÃO","TOCANTINS","AMAZONAS","PIAUÍ"],"valores":[7667747,7509123,4140098,3037565,2956900,2288461]},"lag_brasil":[0.012,0.003,0.004,0.031,0.049],"lag_fogo":[0.02,0.014,0.007,0.047,0.066],"heat_regiao":{"Norte":[0.038,0.032,0.027,0.053],"Centro-Oeste":[-0.013,-0.017,-0.029,0.036],"Nordeste":[0.029,0.017,0.025,0.018],"Sudeste":[0.067,0.061,0.076,0.154],"Sul":[-0.142,-0.155,-0.162,-0.153]},"sudeste_p":0.0263,"sudeste_alta":971.8,"sudeste_baixa":52.0,"teste":{"p":0.0263,"alta":{"wlo":-9436.7,"q1":-2418.3,"med":971.8,"q3":2329.9,"whi":7202.8,"n":47},"baixa":{"wlo":-2101.5,"q1":-519.7,"med":52.0,"q3":741.6,"whi":2559.6,"n":421}}};
+  D.agro = [{"uf":"AC","area":92472,"focos":800417,"reg":"Norte"},{"uf":"AL","area":480909,"focos":80044,"reg":"Nordeste"},{"uf":"AM","area":126671,"focos":2956742,"reg":"Norte"},{"uf":"AP","area":33519,"focos":210800,"reg":"Norte"},{"uf":"BA","area":4309224,"focos":1969918,"reg":"Nordeste"},{"uf":"CE","area":1436168,"focos":648295,"reg":"Nordeste"},{"uf":"DF","area":170887,"focos":37112,"reg":"Centro-Oeste"},{"uf":"ES","area":588542,"focos":83438,"reg":"Sudeste"},{"uf":"GO","area":7246251,"focos":1305780,"reg":"Centro-Oeste"},{"uf":"MA","area":1833435,"focos":4138790,"reg":"Nordeste"},{"uf":"MG","area":5925939,"focos":1553279,"reg":"Sudeste"},{"uf":"MS","area":6150314,"focos":1804351,"reg":"Centro-Oeste"},{"uf":"MT","area":17724958,"focos":7666968,"reg":"Centro-Oeste"},{"uf":"PA","area":2076578,"focos":7507875,"reg":"Norte"},{"uf":"PB","area":361909,"focos":164651,"reg":"Nordeste"},{"uf":"PE","area":803647,"focos":227846,"reg":"Nordeste"},{"uf":"PI","area":1742845,"focos":2288058,"reg":"Nordeste"},{"uf":"PR","area":10988454,"focos":337830,"reg":"Sul"},{"uf":"RJ","area":113122,"focos":103136,"reg":"Sudeste"},{"uf":"RN","area":316253,"focos":105788,"reg":"Nordeste"},{"uf":"RO","area":839089,"focos":2151869,"reg":"Norte"},{"uf":"RR","area":110371,"focos":760680,"reg":"Norte"},{"uf":"RS","area":9745536,"focos":257941,"reg":"Sul"},{"uf":"SC","area":1588083,"focos":169949,"reg":"Sul"},{"uf":"SE","area":306756,"focos":35279,"reg":"Nordeste"},{"uf":"SP","area":8900414,"focos":729835,"reg":"Sudeste"},{"uf":"TO","area":1647156,"focos":3037337,"reg":"Norte"}];
   const FMT = n => n>=1e6 ? (n/1e6).toFixed(1)+' mi' : n>=1e3 ? (n/1e3).toFixed(0)+' mil' : n;
 
   // ----- Marca / títulos ---------------------------------------------
@@ -348,21 +365,24 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // ----- Seção de downloads ------------------------------------------
   const ARQUIVOS = [
-    {file:"queimadas_consolidado.csv",       desc:"Focos de queimada por estado/ano/mês.",      meta:"CSV · 244 KB · 3.240 linhas", fonte:"INPE"},
-    {file:"datasus_consolidado.csv",         desc:"Internações respiratórias por estado/mês.",   meta:"CSV · 52 KB · 3.240 linhas",  fonte:"SUS"},
-    {file:"populacao_consolidado.csv",       desc:"População estimada por UF e ano.",            meta:"CSV · 8 KB · 270 linhas",     fonte:"IBGE"},
-    {file:"queimadas_bioma_consolidado.csv", desc:"Focos agregados por bioma.",                  meta:"CSV · 4 KB · 6 linhas",       fonte:"INPE"},
-    {file:"projeto.ipynb",                   desc:"Notebook completo: análise, gráficos e conclusões.", meta:"Jupyter · 1.4 MB",     fonte:"Python"}
+    {file:"queimadas_consolidado.csv",       desc:"Focos de queimada por estado/ano/mês.",            meta:"INPE · 3.240 linhas"},
+    {file:"datasus_consolidado.csv",         desc:"Internações respiratórias por estado/mês.",        meta:"DATASUS/SUS · 3.240 linhas"},
+    {file:"populacao_consolidado.csv",       desc:"População estimada por UF e ano.",                 meta:"IBGE · 270 linhas"},
+    {file:"area_agricola_consolidado.csv",   desc:"Área plantada por UF e ano (lavouras).",           meta:"IBGE/PAM · 243 linhas"},
+    {file:"queimadas_bioma_consolidado.csv", desc:"Focos agregados por bioma.",                       meta:"INPE · 6 linhas"},
+    {file:"projeto.ipynb",                   desc:"Notebook completo: análise, gráficos e conclusões.", meta:"Jupyter · Python"}
   ];
   const grid = $('dlGrid');
   if (grid) {
-    grid.innerHTML = ARQUIVOS.map(a => `
-      <a class="dl-card" href="${DL_BASE+a.file}" download>
+    grid.innerHTML = ARQUIVOS.map(a => {
+      const url = a.file.endsWith('.ipynb') ? RAW_BASE + a.file : RAW_BASE + 'dados/' + a.file;
+      return `
+      <a class="dl-card" href="${url}" target="_blank" rel="noopener">
         <div class="file">${a.file}</div>
         <div class="desc">${a.desc}</div>
-        <div class="meta">${a.meta} · ${a.fonte}</div>
-        <span class="go">Baixar arquivo</span>
-      </a>`).join('');
+        <div class="meta">${a.meta}</div>
+        <span class="go">Baixar ↗</span>
+      </a>`;}).join('');
   }
 
   // ----- Teste de hipótese: boxplot em SVG (sem dependências) ---------
@@ -399,6 +419,43 @@ document.addEventListener('DOMContentLoaded', function () {
     s+=drawBox(pL+pW*0.32, T.alta,  'rgba(234,84,85,.22)', '#EA5455', '#b3322f', 'Após queimada ALTA');
     s+=drawBox(pL+pW*0.70, T.baixa, '#eef1f4',              '#9aa6ad', '#566169', 'Após queimada baixa');
     sv.innerHTML = s;
+  })();
+
+  // ----- Fronteira agrícola: dispersão área plantada × focos (SVG) ----
+  (function(){
+    const sv=$('chAgro'); if(!sv||!D.agro) return;
+    const W=720,H=400,mT=18,mB=64,mL=64,mR=118;
+    const pL=mL,pR=W-mR,pT=mT,pB=H-mB,pW=pR-pL,pH=pB-pT;
+    const xs=D.agro.map(d=>Math.log10(d.area)), ys=D.agro.map(d=>Math.log10(d.focos));
+    const xlo=4.4,xhi=7.4,ylo=4.3,yhi=7.1;
+    const X=v=>pL+(v-xlo)/(xhi-xlo)*pW, Y=v=>pB-(v-ylo)/(yhi-ylo)*pH;
+    const n=xs.length, sx=xs.reduce((a,b)=>a+b,0), sy=ys.reduce((a,b)=>a+b,0);
+    const sxy=xs.reduce((a,x,i)=>a+x*ys[i],0), sxx=xs.reduce((a,x)=>a+x*x,0);
+    const m=(n*sxy-sx*sy)/(n*sxx-sx*sx), b=(sy-m*sx)/n;
+    const col={"Norte":"#EA5455","Nordeste":"#E0A800","Centro-Oeste":"#17a2b8","Sudeste":"#2c5364","Sul":"#28C76F"};
+    const fmtK=p=>{const v=Math.pow(10,p); return v>=1e6?(v/1e6)+'M':(v/1e3)+'k';};
+    let s='';
+    for(let t=5;t<=7;t++){ const x=X(t),y=Y(t);
+      s+=`<line x1="${x}" y1="${pT}" x2="${x}" y2="${pB}" stroke="#eef1f4" stroke-width="1"/>`;
+      s+=`<text x="${x}" y="${pB+16}" text-anchor="middle" font-size="9.5" fill="#6b7785" font-family="'Outfit',sans-serif">${fmtK(t)}</text>`;
+      s+=`<line x1="${pL}" y1="${y}" x2="${pR}" y2="${y}" stroke="#eef1f4" stroke-width="1"/>`;
+      s+=`<text x="${pL-8}" y="${y+3.5}" text-anchor="end" font-size="9.5" fill="#6b7785" font-family="'Outfit',sans-serif">${fmtK(t)}</text>`;
+    }
+    s+=`<line x1="${X(xlo)}" y1="${Y(m*xlo+b)}" x2="${X(xhi)}" y2="${Y(m*xhi+b)}" stroke="#9aa6ad" stroke-width="1.5" stroke-dasharray="6 4"/>`;
+    s+=`<text x="${pL+pW/2}" y="${H-6}" text-anchor="middle" font-size="11" fill="#2c5364" font-family="'Outfit',sans-serif" font-weight="600">Área plantada (ha · escala log)</text>`;
+    s+=`<text transform="translate(15,${pT+pH/2}) rotate(-90)" text-anchor="middle" font-size="11" fill="#2c5364" font-family="'Outfit',sans-serif" font-weight="600">Focos (escala log)</text>`;
+    const lab=new Set(["MT","PA","PR","RS","SP","AM","GO"]);
+    D.agro.forEach((d,i)=>{ const x=X(xs[i]),y=Y(ys[i]),c=col[d.reg]||"#6b7785";
+      s+=`<circle cx="${x}" cy="${y}" r="5.5" fill="${c}" fill-opacity="0.82" stroke="#fff" stroke-width="1"/>`;
+      if(lab.has(d.uf)) s+=`<text x="${x+8}" y="${y+3.5}" font-size="10" font-weight="700" fill="#16261f" font-family="'Space Mono',monospace">${d.uf}</text>`;
+    });
+    Object.keys(col).forEach((rg,i)=>{ const ly=pT+10+i*17;
+      s+=`<circle cx="${pR+16}" cy="${ly}" r="5" fill="${col[rg]}"/>`;
+      s+=`<text x="${pR+26}" y="${ly+3.5}" font-size="9.5" fill="#6b7785" font-family="'Outfit',sans-serif">${rg}</text>`;
+    });
+    s+=`<text x="${pR+16}" y="${pB-14}" font-size="9" fill="#6b7785" font-family="'Space Mono',monospace">Spearman</text>`;
+    s+=`<text x="${pR+16}" y="${pB}" font-size="14" font-weight="700" fill="#2c5364" font-family="'Space Mono',monospace">r=0,47</text>`;
+    sv.innerHTML=s;
   })();
 
   // ----- Chart.js ----------------------------------------------------
