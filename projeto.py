@@ -1251,3 +1251,103 @@ plt.tight_layout()
 plt.show()
 
 #%%
+# ============================================================================
+# CRUZAMENTO - NÍVEL 6: uso do solo — área plantada (4ª base)
+# ============================================================================
+# Integra a ÁREA PLANTADA por estado (IBGE/PAM, SIDRA tabela 5457, variável 8331).
+# Mesma lógica de download da população (mesma família de API do IBGE).
+# A PAM cobre 2016-2024 (a safra de 2025 ainda não foi divulgada).
+URL_AREA = "https://apisidra.ibge.gov.br/values/t/5457/n3/all/v/8331/p/2016-2025?formato=json"
+req = urllib.request.Request(URL_AREA, headers={"User-Agent": "Mozilla/5.0"})
+with urllib.request.urlopen(req, timeout=60) as r:
+    dados_area = json.loads(r.read().decode("utf-8"))
+
+registros = []
+for item in dados_area[1:]:                  # 1º elemento é o cabeçalho
+    sigla = mapa_uf.get(item["D1C"])          # D1C = código IBGE da UF
+    if sigla is None:
+        continue
+    try:
+        valor = float(item["V"])              # V = área plantada (hectares)
+    except (TypeError, ValueError):
+        continue                              # ignora "..."/"-" (indisponível)
+    registros.append({"Estado": sigla, "Ano": int(item["D3C"]),
+                       "Area_Agricola_Ha": valor})
+
+df_area = pd.DataFrame(registros)
+print(f"Área plantada baixada: {len(df_area)} registros, "
+      f"{df_area['Estado'].nunique()} estados, "
+      f"anos {df_area['Ano'].min()}-{df_area['Ano'].max()}")
+
+#%%
+# Integra a área à base e cria os indicadores NORMALIZADOS
+base = base.drop(columns=[c for c in ["Area_Agricola_Ha"] if c in base.columns])  # re-run seguro
+base = base.merge(df_area, on=["Estado", "Ano"], how="left")
+
+base["Focos_por_1000ha"] = base["Qtd_Focos"] / base["Area_Agricola_Ha"] * 1000
+base["Focos_por_100k"]   = base["Qtd_Focos"] / base["Populacao"]        * 100_000
+# (Internacoes_por_100k já foi criada na seção de população)
+
+sem_area = int(base["Area_Agricola_Ha"].isna().sum())
+print(f"Base com área integrada. Linhas sem área (meses de 2025): {sem_area}")
+
+#%%
+# NÍVEL 6.1 — o fogo acompanha a agricultura? (correlação por estado)
+# total de focos (2016-2025) x área plantada média anual (2016-2024)
+focos_uf = base.groupby("Estado")["Qtd_Focos"].sum()
+area_uf  = df_area.groupby("Estado")["Area_Agricola_Ha"].mean()
+agro = pd.concat([focos_uf, area_uf], axis=1).reset_index()
+agro.columns = ["Estado", "Focos", "Area_ha"]
+agro["Regiao"] = agro["Estado"].map(regiao_sigla)
+
+r,  p  = stats.pearsonr(agro["Area_ha"], agro["Focos"])
+rs, ps = stats.spearmanr(agro["Area_ha"], agro["Focos"])
+rl, pl = stats.pearsonr(np.log10(agro["Area_ha"]), np.log10(agro["Focos"]))
+print("Focos x área plantada por estado:")
+print(f"  Pearson  (linear) : r = {r:+.3f}  (p = {p:.3f})")
+print(f"  Spearman (rank)   : r = {rs:+.3f}  (p = {ps:.3f})")
+print(f"  Pearson  (log-log): r = {rl:+.3f}  (p = {pl:.3f})")
+
+plt.figure(figsize=(11, 7))
+sns.scatterplot(data=agro, x="Area_ha", y="Focos", hue="Regiao", s=130,
+                edgecolor="white", linewidth=1)
+for _, row in agro.iterrows():
+    if row["Estado"] in ["MT", "PA", "PR", "RS", "SP", "AM", "GO"]:
+        plt.annotate(row["Estado"], (row["Area_ha"], row["Focos"]),
+                     xytext=(6, 4), textcoords="offset points", fontweight="bold")
+plt.xscale("log"); plt.yscale("log")
+plt.xlabel("Área plantada média anual (ha, escala log)")
+plt.ylabel("Focos de queimada — total 2016-2025 (escala log)")
+plt.title(f"Focos × área plantada por estado (Spearman r = {rs:.2f})")
+plt.legend(title="Região")
+plt.tight_layout()
+plt.show()
+
+print("Associação positiva, porém MODERADA: PR e RS plantam muito e queimam")
+print("pouco; o fogo segue a fronteira agrícola sobre biomas secos (Cerrado/Amazônia).")
+
+#%%
+# NÍVEL 6.2 — focos por hectare de lavoura: o fogo do Norte não é agrícola
+rank_ha = (base.dropna(subset=["Focos_por_1000ha"])
+               .groupby("Estado")["Focos_por_1000ha"].mean()
+               .sort_values(ascending=False).reset_index())
+rank_ha["Regiao"] = rank_ha["Estado"].map(regiao_sigla)
+print("Focos por 1.000 ha de lavoura — média estadual (2016-2024):")
+print(rank_ha.round(1).to_string(index=False))
+
+plt.figure(figsize=(15, 6))
+sns.barplot(data=rank_ha, x="Estado", y="Focos_por_1000ha", hue="Regiao", dodge=False)
+plt.yscale("log")
+plt.title("Focos de queimada por 1.000 ha de lavoura — média estadual (2016-2024)")
+plt.ylabel("Focos / 1.000 ha (escala log)")
+plt.xlabel("")
+plt.xticks(rotation=45, ha="right")
+plt.legend(title="Região", ncol=5, fontsize=8)
+plt.tight_layout()
+plt.show()
+
+print("Normalizado pela lavoura, o ranking se INVERTE: o Norte dispara")
+print("(AM ~201, AC ~77 focos/1.000 ha) e o Sul some (RS ~0,2). No Norte o fogo")
+print("é de ABERTURA de área (desmatamento), não de manejo agrícola consolidado.")
+
+#%%
